@@ -157,4 +157,4 @@ open ios/Runner.xcworkspace
 - Dio (网络请求)
 - cached_network_image (图片缓存)
 - shimmer (加载动画)
-
+- pull_to_refresh(刷新)
