@@ -24,14 +24,16 @@ class ItunesProvider {
   }
 
   // 搜索歌曲
-  Future<List<Song>> searchSongs(String term) async {
+  Future<List<Song>> searchSongs(String term,
+      {int page = 1, int pageSize = 20}) async {
     try {
       final response = await _dio.get(
         '$_baseUrl/search',
         queryParameters: {
           'term': term,
           'entity': 'song',
-          'limit': '50',
+          'limit': pageSize.toString(),
+          'offset': ((page - 1) * pageSize).toString(),
         },
       );
 

@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide RefreshIndicator;
 import 'package:get/get.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:taylor_swift_music/app/modules/home/views/error_view.dart';
 import '../controllers/home_controller.dart';
 import '../../../data/models/song_model.dart';
@@ -22,6 +23,12 @@ class HomeView extends GetView<HomeController> {
         backgroundColor: Colors.white,
         elevation: 0,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () {
+              // TODO: 实现搜索功能
+            },
+          ),
           PopupMenuButton<String>(
             onSelected: controller.sortSongs,
             itemBuilder: (context) => [
@@ -68,11 +75,11 @@ class HomeView extends GetView<HomeController> {
           ),
           Expanded(
             child: Obx(() {
-              if (controller.isLoading.value) {
+              if (controller.isLoading.value && controller.songs.isEmpty) {
                 return _buildLoadingList();
               }
 
-              if (controller.error.isNotEmpty) {
+              if (controller.error.isNotEmpty && controller.songs.isEmpty) {
                 return _buildErrorView();
               }
 
@@ -80,7 +87,39 @@ class HomeView extends GetView<HomeController> {
                 return _buildEmptyView();
               }
 
-              return _buildSongListView();
+              return SmartRefresher(
+                enablePullDown: true,
+                enablePullUp: controller.hasMore.value,
+                header: const WaterDropHeader(),
+                footer: CustomFooter(
+                  builder: (BuildContext context, LoadStatus? mode) {
+                    Widget body;
+                    if (mode == LoadStatus.idle) {
+                      body = const Text("上拉加载");
+                    } else if (mode == LoadStatus.loading) {
+                      body = const CircularProgressIndicator();
+                    } else if (mode == LoadStatus.failed) {
+                      body = const Text("加载失败！点击重试！");
+                    } else if (mode == LoadStatus.canLoading) {
+                      body = const Text("松手,加载更多!");
+                    } else {
+                      body = const Text("没有更多数据了!");
+                    }
+                    return SizedBox(
+                      height: 55.0,
+                      child: Center(child: body),
+                    );
+                  },
+                ),
+                controller: controller.refreshController,
+                onRefresh: () async {
+                  await controller.fetchSongs(isRefresh: true);
+                },
+                onLoading: () async {
+                  await controller.loadMore();
+                },
+                child: _buildSongListView(),
+              );
             }),
           ),
         ],
@@ -148,7 +187,8 @@ class HomeView extends GetView<HomeController> {
   Widget _buildErrorView() {
     return ErrorView(
       errorMessage: controller.error.value,
-      onRetry: () => controller.retryFetch(), isLoading: false,
+      onRetry: () => controller.retryFetch(),
+      isLoading: false,
     );
   }
 

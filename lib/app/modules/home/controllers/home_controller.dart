@@ -1,9 +1,11 @@
 import 'package:get/get.dart';
+import 'package:pull_to_refresh/pull_to_refresh.dart';
 import '../../../data/models/song_model.dart';
 import '../../../data/providers/itunes_provider.dart';
 
 class HomeController extends GetxController {
   final _provider = ItunesProvider();
+  final refreshController = RefreshController();
 
   final songs = <Song>[].obs;
   final filteredSongs = <Song>[].obs;
@@ -13,16 +15,28 @@ class HomeController extends GetxController {
   final sortBy = 'releaseDate'.obs;
   final hasNetwork = true.obs;
 
+  // 分页相关
+  final currentPage = 1.obs;
+  final hasMore = true.obs;
+  final isLoadingMore = false.obs;
+  static const int pageSize = 20;
+
   @override
   void onInit() {
     super.onInit();
     _initializeAndFetch();
   }
 
+  @override
+  void onClose() {
+    refreshController.dispose();
+    super.onClose();
+  }
+
   Future<void> _initializeAndFetch() async {
     await checkAndUpdateNetworkStatus();
     if (hasNetwork.value) {
-      await fetchSongs();
+      await fetchSongs(isRefresh: true);
     }
   }
 
@@ -38,24 +52,60 @@ class HomeController extends GetxController {
     }
   }
 
-  Future<void> fetchSongs() async {
+  Future<void> fetchSongs({bool isRefresh = false}) async {
     if (!hasNetwork.value) {
       error.value = '网络连接失败，请检查网络设置后重试';
+      refreshController.refreshFailed();
       return;
     }
 
     try {
-      isLoading.value = true;
+      if (isRefresh) {
+        isLoading.value = true;
+        currentPage.value = 1;
+        hasMore.value = true;
+      } else {
+        isLoadingMore.value = true;
+      }
       error.value = '';
 
-      final fetchedSongs = await _provider.searchSongs('taylor+swift');
-      songs.value = fetchedSongs;
+      final fetchedSongs = await _provider.searchSongs(
+        'taylor+swift',
+        page: currentPage.value,
+        pageSize: pageSize,
+      );
+
+      if (isRefresh) {
+        songs.value = fetchedSongs;
+        refreshController.refreshCompleted();
+      } else {
+        songs.addAll(fetchedSongs);
+        refreshController.loadComplete();
+      }
+
+      hasMore.value = fetchedSongs.length >= pageSize;
+      if (hasMore.value) {
+        currentPage.value++;
+      }
+
       _filterAndSortSongs();
       error.value = '';
     } catch (e) {
       error.value = e.toString();
+      if (isRefresh) {
+        refreshController.refreshFailed();
+      } else {
+        refreshController.loadFailed();
+      }
     } finally {
       isLoading.value = false;
+      isLoadingMore.value = false;
+    }
+  }
+
+  Future<void> loadMore() async {
+    if (!isLoadingMore.value && hasMore.value && !isLoading.value) {
+      await fetchSongs();
     }
   }
 
@@ -65,7 +115,7 @@ class HomeController extends GetxController {
 
     if (hasNetwork.value) {
       error.value = '';
-      await fetchSongs();
+      await fetchSongs(isRefresh: true);
     } else {
       error.value = '网络连接失败，请检查网络设置后重试';
       isLoading.value = false;
