@@ -17,7 +17,7 @@
 
 1. **克隆项目**
 ```bash
-git clone [项目地址]
+git clone https://github.com/530l/taylor_swift_music.git
 cd flutterdemo
 ```
 
