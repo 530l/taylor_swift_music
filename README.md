@@ -158,18 +158,3 @@ open ios/Runner.xcworkspace
 - cached_network_image (图片缓存)
 - shimmer (加载动画)
 
-## 贡献指南
-
-1. Fork 项目
-2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交改动 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 提交 Pull Request
-
-## 许可证
-
-[MIT License](LICENSE)
-
-## 联系方式
-
-如有问题，请提交 Issue 或联系项目维护者。
