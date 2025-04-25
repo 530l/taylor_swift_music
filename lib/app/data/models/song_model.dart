@@ -26,20 +26,50 @@ class Song {
   });
 
   factory Song.fromJson(Map<String, dynamic> json) {
-    return Song(
-      trackName: json['trackName'] ?? '',
-      artistName: json['artistName'] ?? '',
-      collectionName: json['collectionName'] ?? '',
-      artworkUrl100: json['artworkUrl100'] ?? '',
-      trackPrice: (json['trackPrice'] ?? 0.0).toDouble(),
-      releaseDate: DateTime.parse(
-        json['releaseDate'] ?? DateTime.now().toIso8601String(),
-      ),
-      previewUrl: json['previewUrl']?.toString(),
-      trackViewUrl: json['trackViewUrl']?.toString(),
-      isStreamable: json['isStreamable'] ?? false,
-      primaryGenreName: json['primaryGenreName']?.toString() ?? 'Unknown',
-      currency: json['currency']?.toString() ?? 'USD',
-    );
+    // 处理价格
+    double parsePrice(dynamic value) {
+      if (value == null) return 0.0;
+      if (value is int) return value.toDouble();
+      if (value is double) return value;
+      if (value is String) return double.tryParse(value) ?? 0.0;
+      return 0.0;
+    }
+
+    // 处理布尔值
+    bool parseBool(dynamic value) {
+      if (value == null) return false;
+      if (value is bool) return value;
+      if (value is int) return value != 0;
+      if (value is String) return value.toLowerCase() == 'true';
+      return false;
+    }
+
+    try {
+      return Song(
+        trackName: json['trackName']?.toString() ?? '',
+        artistName: json['artistName']?.toString() ?? '',
+        collectionName: json['collectionName']?.toString() ?? '',
+        artworkUrl100:
+            (json['artworkUrl100'] ?? json['artworkUrl60'])?.toString() ?? '',
+        trackPrice: parsePrice(json['trackPrice']),
+        releaseDate: DateTime.parse(
+          json['releaseDate']?.toString() ?? DateTime.now().toIso8601String(),
+        ),
+        previewUrl: json['previewUrl']?.toString(),
+        trackViewUrl: json['trackViewUrl']?.toString(),
+        isStreamable: parseBool(json['isStreamable']),
+        primaryGenreName: json['primaryGenreName']?.toString() ?? 'Unknown',
+        currency: json['currency']?.toString() ?? 'USD',
+      );
+    } catch (e) {
+      print('Song解析错误: $e');
+      print('原始数据: $json');
+      rethrow;
+    }
+  }
+
+  @override
+  String toString() {
+    return 'Song{trackName: $trackName, artistName: $artistName, price: $trackPrice}';
   }
 }

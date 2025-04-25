@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:taylor_swift_music/app/modules/home/views/error_view.dart';
 import '../controllers/home_controller.dart';
 import '../../../data/models/song_model.dart';
 
@@ -145,19 +146,9 @@ class HomeView extends GetView<HomeController> {
   }
 
   Widget _buildErrorView() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.error_outline, size: 48, color: Colors.red[300]),
-          const SizedBox(height: 16),
-          Text(
-            controller.error.value,
-            style: TextStyle(color: Colors.red[300], fontSize: 16),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
+    return ErrorView(
+      errorMessage: controller.error.value,
+      onRetry: () => controller.retryFetch(), isLoading: false,
     );
   }
 

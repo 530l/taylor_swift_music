@@ -1,44 +1,73 @@
-import 'dart:convert';
 import 'package:get/get.dart';
-import 'package:http/http.dart' as http;
 import '../../../data/models/song_model.dart';
+import '../../../data/providers/itunes_provider.dart';
 
 class HomeController extends GetxController {
+  final _provider = ItunesProvider();
+
   final songs = <Song>[].obs;
   final filteredSongs = <Song>[].obs;
   final isLoading = false.obs;
   final error = ''.obs;
   final searchQuery = ''.obs;
   final sortBy = 'releaseDate'.obs;
+  final hasNetwork = true.obs;
 
   @override
   void onInit() {
     super.onInit();
-    fetchSongs();
+    _initializeAndFetch();
+  }
+
+  Future<void> _initializeAndFetch() async {
+    await checkAndUpdateNetworkStatus();
+    if (hasNetwork.value) {
+      await fetchSongs();
+    }
+  }
+
+  Future<void> checkAndUpdateNetworkStatus() async {
+    try {
+      hasNetwork.value = await _provider.checkNetworkStatus();
+      if (!hasNetwork.value) {
+        error.value = '网络连接失败，请检查网络设置后重试';
+      }
+    } catch (e) {
+      hasNetwork.value = false;
+      error.value = '网络状态检查失败: $e';
+    }
   }
 
   Future<void> fetchSongs() async {
+    if (!hasNetwork.value) {
+      error.value = '网络连接失败，请检查网络设置后重试';
+      return;
+    }
+
     try {
       isLoading.value = true;
       error.value = '';
 
-      final response = await http.get(
-        Uri.parse(
-          'https://itunes.apple.com/search?term=taylor+swift&entity=song&limit=50',
-        ),
-      );
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        final List<dynamic> results = data['results'];
-        songs.value = results.map((json) => Song.fromJson(json)).toList();
-        _filterAndSortSongs();
-      } else {
-        error.value = '获取数据失败';
-      }
+      final fetchedSongs = await _provider.searchSongs('taylor+swift');
+      songs.value = fetchedSongs;
+      _filterAndSortSongs();
+      error.value = '';
     } catch (e) {
-      error.value = '发生错误: $e';
+      error.value = e.toString();
     } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> retryFetch() async {
+    isLoading.value = true;
+    await checkAndUpdateNetworkStatus();
+
+    if (hasNetwork.value) {
+      error.value = '';
+      await fetchSongs();
+    } else {
+      error.value = '网络连接失败，请检查网络设置后重试';
       isLoading.value = false;
     }
   }
