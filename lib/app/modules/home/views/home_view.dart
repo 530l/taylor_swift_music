@@ -23,12 +23,6 @@ class HomeView extends GetView<HomeController> {
         backgroundColor: Colors.white,
         elevation: 0,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () {
-              // TODO: 实现搜索功能
-            },
-          ),
           PopupMenuButton<String>(
             onSelected: controller.sortSongs,
             itemBuilder: (context) => [
