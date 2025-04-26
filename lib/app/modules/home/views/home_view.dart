@@ -84,27 +84,6 @@ class HomeView extends GetView<HomeController> {
               return SmartRefresher(
                 enablePullDown: true,
                 enablePullUp: controller.hasMore.value,
-                header: const WaterDropHeader(),
-                footer: CustomFooter(
-                  builder: (BuildContext context, LoadStatus? mode) {
-                    Widget body;
-                    if (mode == LoadStatus.idle) {
-                      body = const Text("上拉加载");
-                    } else if (mode == LoadStatus.loading) {
-                      body = const CircularProgressIndicator();
-                    } else if (mode == LoadStatus.failed) {
-                      body = const Text("加载失败！点击重试！");
-                    } else if (mode == LoadStatus.canLoading) {
-                      body = const Text("松手,加载更多!");
-                    } else {
-                      body = const Text("没有更多数据了!");
-                    }
-                    return SizedBox(
-                      height: 55.0,
-                      child: Center(child: body),
-                    );
-                  },
-                ),
                 controller: controller.refreshController,
                 onRefresh: () async {
                   await controller.fetchSongs(isRefresh: true);
