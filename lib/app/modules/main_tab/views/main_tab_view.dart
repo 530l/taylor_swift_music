@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../../Test.dart';
 import '../../home/views/home_view.dart';
 import '../../music/views/music_view.dart';
 import '../../community/views/community_view.dart';
 import '../../profile/views/profile_view.dart';
-
 class MainTabView extends StatefulWidget {
   const MainTabView({Key? key}) : super(key: key);
 
@@ -15,7 +15,6 @@ class MainTabView extends StatefulWidget {
 class _MainTabViewState extends State<MainTabView> {
   int _currentIndex = 0;
   final List<Widget?> _pages = [null, null, null, null];
-
   Widget _getPage(int index) {
     if (_pages[index] == null) {
       switch (index) {
@@ -34,6 +33,11 @@ class _MainTabViewState extends State<MainTabView> {
       }
     }
     return _pages[index]!;
+  }
+
+  void test2(){
+    Test test = Test();
+    test.tag;
   }
 
   @override
